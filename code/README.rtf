@@ -1,0 +1,37 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf200
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 This folder contains all the materials needed to run the U39 lab experiment using the PsychoPy standalone (python 2.7). This version is set to to run on a 13\'94 screen as well as on a 27\'94. One can access the predictions for both he English and the Japanese versions you can do so in the preregistrations \ul osf.io/8xuc9/\ulnone  and \ul osf.io/akcyp/\ulnone  respectively.\
+\
+Caveats:\
+If you are running the code on the terminal instead, make sure you have PsychoPy installed as well as all the other required packages specified in the header of the two .py files contained in this folder.    \
+\
+Depending on your version of the Psychopy you are running (e.g. v1.85.6) there might be a bug in event.py. To solve that just follow the instructions in {\field{\*\fldinst{HYPERLINK "https://discourse.psychopy.org/t/mouse-py-in-demos-giving-typeerror-unsupported-operand-type-s-for-tuple-and-int/3112"}}{\fldrslt https://discourse.psychopy.org/t/mouse-py-in-demos-giving-typeerror-unsupported-operand-type-s-for-tuple-and-int/3112}}\
+\
+Instructions to run Experiment 1, which are the same for all the other experiements:\
+Create a U39Lab folder on your desktop  and add the two .py scripts within the Experiment 1 folder. Add also the `keys\'92 folder and the `U39_stims\'92 folder you will find in the repository. Additionally, create a `data\'92 folder within the same where data will be stored.  When all of this is set up, run  \'91U39_reverse_run.py\'92 to run Experiment 1. Alternatively, change the path in \'91U39_reverse_run.py\'92 . The other .py file contains the experiment and it is imported in the file to run. Before you start the experiment, make sure you have the sound and the mic on and that you have started a recording with Audacity.\
+\
+When you run the experiment, you will be asked to enter the participant number. The first digit of the participant number is the code that determines the condition they are in. The preregistered conditions  are 5 and 6, for post- and pre-nominal marking respectively, but see below for all the correspondences between codes and conditions:\
+\
+ Code        Paradigm           Majority order     Noun position.  \
+\
+    1         regularisation         unmarked            initial\
+    2         regularisation           marked              initial\
+    3         regularisation         unmarked            final\
+    4         regularisation            marked             final\
+    5         extrapolation                                      initial\
+    6         extrapolation                                      final\
+\
+\
+Use Escape to exit the experiment when you are done. \
+\
+Data is stored in the \'91data\'92 folder.  Audio recordings have to be stored separately when Audacity finishes recording:  pause the recording, click export audio and save in \'91data_rec\'92 folder in the format \'91participantNumber.wav\'92\
+\
+\
+\
+\
+}
