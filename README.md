@@ -35,7 +35,7 @@ Data is stored in the ``U39Lab/data`` folder you have created. Audio recordings 
 Export the audio recodrings after the experiment is completed  and save the data in a folder for later trascription. 
 
 ## Experimental data
-All data files used for analysis are in a .zip file within the ``data`` folder. The file contains four folders, one per experiment. Within each folder, you can find the original .csv files collected during the experiements and a folder named ``final_data`` which contains the modified files to include the transcriptions of the oral productions. The latter are the ones used to run the analyses reported. The DV is the binaryResp column, the other variables are transparently coded.
+All data files used for analysis are in a .zip file within the ``data`` folder. The file contains four folders, one per experiment. Within each folder, you can find the original .csv files collected during the experiments and a folder named ``final_data`` which contains the modified files to include the transcriptions of the oral productions. The latter are the ones used to run the analyses reported. The DV is the binaryResp column, the other variables are transparently coded.
 
 
 
