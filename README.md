@@ -4,7 +4,7 @@ This repository contains all the materials needed to run the experiments and ana
 
 ## Experimental code
 
-This repository contains all the materials needed to run the reported experiment using the ``PsychoPy2`` standalone (python 2.7). The versions of the code provided are set to to run on a 13” screen as well as on a 27”. [Caveat: If you are running the code on the terminal instead, make sure you have PsychoPy installed as well as all the other required packages specified in the header of the two .py files contained in this folder.]
+This repository contains all the materials needed to run the reported experiment using the ``PsychoPy2`` standalone (python 2.7). The versions of the code provided are set to to run on a 13” screen as well as on a 27”. [Caveat: If you are running the code on the terminal instead, make sure you have the PsychoPy module installed as well as all the other required modules specified in the header of the two .py files used to run the experiments.]
 
 ### Running the experiments
 
