@@ -14,9 +14,11 @@ This repository contains all the materials needed to run the reported experiment
 
 2. Add the ``keys`` folder and the ``U39_stims`` folder to it, unzip all folders within. 
 
-3. When you unzip ``U39_stims/sentences/all/phrases`` and ``U39_stims/sentences/allJPN/phrases``you will need to run the ``combinePhrases.py`` script within the same folder to generate all the sentences used as stimuli. Then move all the generated sentences on folder up to ``U39_stims/sentences/all`` or ``U39_stims/sentences/allJPN`` accordingly; the ``instructions`` and ``soundeffects`` folders should also be there (as folders). 
+3. When you unzip ``U39_stims/sentences/all/phrases`` and ``U39_stims/sentences/allJPN/phrases``you will need to run the ``combinePhrases.py`` script within the same folder to generate all the sentences used as stimuli. You will first need to make sure you install [pydub](https://pypi.org/project/pydub/) and [ffmpeg](https://ffmpeg.org/) to run the script, also make sure you uncomment the last four lines of code which will generate the sentences.
 
-4. Create a ``data`` folder within ``U39Lab`` where the data will be stored.
+4. Move all the generated sentences on folder up to ``U39_stims/sentences/all`` or ``U39_stims/sentences/allJPN`` accordingly; the ``instructions`` and ``soundeffects`` folders should also be there (as folders). 
+
+5. Create a ``data`` folder within ``U39Lab`` where the data will be stored.
 
 #### When all of this is set up:
 
