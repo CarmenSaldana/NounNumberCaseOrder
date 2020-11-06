@@ -1,0 +1,392 @@
+---
+title: 'Analysis script'
+author: "Carmen Saldana, Yohei Oseki & Jennifer Culbertson (submitted) Cross-linguistic patterns of morpheme order reflect cognitive biases: An experimental study of case and number morphology"
+date: ""
+output: 
+  html_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+require(lme4)
+require(plyr)
+require(ggplot2)
+require(scales)
+require(RColorBrewer)
+require(kableExtra)
+require(broom.mixed)
+require(stringr)
+require(tidyverse)
+require(ggpubr)
+require(sjmisc)
+'%!in%' <- function(x,y)!('%in%'(x,y))
+se <- function(x) sqrt(var(x)/length(x))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Path to folders
+
+path_dataFolder <-"../data/data_exp1_english/final_data/"
+
+path_dataFolder_freq <-"../data/data_exp3bis_frequency/final_data/"
+
+path_dataFolder_bound <-"../data/data_exp4_noallomorphy/final_data/"
+
+path_dataFolder_scope <-"../data/data_exp4_caseallomorphy/final_data/"
+
+path_dataFolder_jpn <-"../data/data_exp2_japanese/final_data/"
+
+path_dataFolder_expl <-"../data/data_exp3_NomSg_explicit_training/final_data/"
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Join files together:
+
+u39MergedData <- do.call(rbind,lapply(list.files(path = path_dataFolder, full.names = TRUE), read.csv, header=TRUE))
+
+u39MergedData['Experiment'] = 'original'
+
+u39MergedData_freq <- do.call(rbind,lapply(list.files(path = path_dataFolder_freq, full.names = TRUE), read.csv, header=TRUE))
+
+u39MergedData_freq['Experiment'] = 'freq'
+
+u39MergedData_bound <- do.call(rbind,lapply(list.files(path = path_dataFolder_bound, full.names = TRUE), read.csv, header=TRUE))
+
+u39MergedData_bound['Experiment'] = 'bound'
+
+u39MergedData_scope <- do.call(rbind,lapply(list.files(path = path_dataFolder_scope, full.names = TRUE), read.csv, header=TRUE))
+
+u39MergedData_scope['Experiment'] = 'scope'
+
+u39MergedData_jpn <- do.call(rbind,lapply(list.files(path = path_dataFolder_jpn, full.names = TRUE), read.csv, header=TRUE))
+
+u39MergedData_jpn['Experiment'] = 'jpn'
+
+u39MergedData_expl <- do.call(rbind,lapply(list.files(path = path_dataFolder_expl, full.names = TRUE), read.csv, header=TRUE))
+
+u39MergedData_expl['Experiment'] = 'expl'
+
+names(u39MergedData_expl)[names(u39MergedData_expl) == "BinaryResp"] <- "binaryResp"
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE }
+#Combine in one data frame experiments 1, 2 and 3 and 4 (with ID and Experiment as factors)
+
+u39MergedData_allALLExp <- rbind(u39MergedData, u39MergedData_freq, u39MergedData_bound,u39MergedData_scope,u39MergedData_jpn,u39MergedData_expl)
+
+u39MergedData_allALLExp$ID=factor(u39MergedData_allALLExp$ID)
+u39MergedData_allALLExp$Experiment=factor(u39MergedData_allALLExp$Experiment)
+u39MergedData_allALLExp$Experiment=factor(u39MergedData_allALLExp$Experiment,levels=c('original','bound','freq','scope','jpn','expl'))
+
+u39MergedData_boundExp<-subset(u39MergedData_allALLExp, Experiment %in% c('bound','scope'))
+u39MergedData_freqExpSingle<-subset(u39MergedData_allALLExp, Experiment %in% c('freq'))
+u39MergedData_crosslingExp<-subset(u39MergedData_allALLExp, Experiment %in% c('original','jpn'))
+u39MergedData_originalExp<-subset(u39MergedData_allALLExp, Experiment %in% c('original','bound'))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Subset data
+
+data_all <- subset(u39MergedData_allALLExp, binaryResp %in% c(0,1), select=c(ID,binaryResp,Phase,Experiment,NounPosition))
+
+data_all$Phase <-mapvalues(data_all$Phase, from = c('ComplexPhrase_Testing', 'ComplexPhrase_Typing'), to = c("oral", "written"))
+
+meanBySubject <- aggregate(binaryResp ~ ID+Experiment+NounPosition+Phase, data_all, mean)
+
+meanBySubject_all <- aggregate(binaryResp ~ ID+Experiment+NounPosition, data_all, mean)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+meanBySubject$bin<-as.factor(round(meanBySubject$binaryResp,1))
+
+meanBySubject$Experiment <- mapvalues(meanBySubject$Experiment , from = c('original', 'bound','freq','scope','jpn','expl'), to = c("unbound EN", "bound", "case>number frequency", "case allomorphy", "unbound JP","explicit marked"))
+
+meanBySubject_original<-subset(meanBySubject, Experiment %in% c('unbound EN', 'unbound JP'))
+
+meanBySubject_original$NounPosition <- mapvalues(meanBySubject_original$NounPosition , from = c('initial', 'final'), to = c('post-nom', 'pre-nom'))
+
+meanBySubject_original$Experiment <- mapvalues(meanBySubject_original$Experiment , from = c("unbound EN", "unbound JP"), to = c('English', 'Japanese'))
+```
+
+# Experiment 1
+```{r echo=FALSE,  warning=FALSE, message=FALSE, fig.height=3, fig.width=5, fig.cap="**Figure 2:** \\ *Results from experiment 1.* Percentage of participants in Experiment 1 who produced scope-isomorphic responses a given proportion of the time, ranging from 100% of the time (dark red) to 0% of the time (yellow) in intervals of 10%  (i.e., proportions are rounded to one decimal). Results are split by Marker Position (pre- vs. post-nominal) and faceted by testing Phase (Oral and Written production trials)."}
+
+meanBySubject_original_eng<-subset(meanBySubject_original, Experiment %in% 'English')
+
+colors_bar_original_eng<-c("#8E063B",  "#C56551",  "#E99F61",  "#F6C971")
+
+stack_bar_original_eng<-ggplot(meanBySubject_original_eng, aes(NounPosition,..count..,fill=bin))+geom_bar(position="fill",colour = "grey",alpha=0.8)+facet_grid(.~Phase)+  scale_y_continuous(labels = percent)+theme_bw()+labs(x="\n position of number and case markers \n ",y='% participants \n')+scale_fill_manual("proportion \nscope-isomorphic \nproductions",values = rev(colors_bar_original_eng))+theme(legend.title= element_text(size = 10))
+
+stack_bar_original_eng
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Subset data and analyse Exp1 
+
+u39MergedData_all <- subset(u39MergedData, binaryResp %in% c(0,1), select=c(ID,binaryResp,Noun, NounPosition,Phase))
+
+u39MergedData_oral <- subset(u39MergedData, binaryResp %in% c(0,1) & Phase == 'ComplexPhrase_Testing', select=c(ID,binaryResp,Noun, NounPosition))
+
+u39MergedData_written <- subset(u39MergedData, binaryResp %in% c(0,1) & Phase == 'ComplexPhrase_Typing', select=c(ID,binaryResp,Noun, NounPosition))
+
+u39MergedData_oral$ID=factor(u39MergedData_oral$ID)
+
+
+u39.model.simple <- glmer(binaryResp~NounPosition+(1|ID),family=binomial, data=u39MergedData_oral,control = glmerControl(optimizer = "bobyqa",optCtrl=list(maxfun=17700)),contrasts=list(NounPosition="contr.sum"))
+
+```
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+
+kable(tidy(u39.model.simple,effects = "fixed"), digits= 3, format = "html", caption = "**Table 1: ** \\ *Model output for Experiment 1 (oral production only).*") %>%
+  kable_styling( "striped", position = "left", font_size = 11)
+```
+
+# Experiment 2
+```{r echo=FALSE,  warning=FALSE, message=FALSE, fig.height=3, fig.width=5,fig.cap="**Figure 3:** \\ *Results from experiment 2.* Percentage of participants in Experiment 2 who produced scope-isomorphic responses a given proportion of the time, ranging from 100% of the time (dark red) to 0% of the time (yellow) in intervals of 10%  (i.e., proportions are rounded to one decimal). Results are split by Marker Position (pre- vs. post-nominal) and faceted by testing Phase (Oral and Written production trials)."}
+
+meanBySubject_original_jp<-subset(meanBySubject_original, Experiment %in% 'Japanese')
+
+colors_bar_original_jp<-c("#8E063B",  "#C56551")
+
+stack_bar_original_jp<-ggplot(meanBySubject_original_jp, aes(NounPosition,..count..,fill=bin))+geom_bar(position="fill",colour = "grey",alpha=0.8)+facet_grid(.~Phase)+  scale_y_continuous(labels = percent)+theme_bw()+labs(x="\n position of number and case markers \n ",y='% participants \n')+scale_fill_manual("proportion \nscope-isomorphic \nproductions",values = rev(colors_bar_original_jp))+theme(legend.title= element_text(size = 10))
+
+stack_bar_original_jp
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Subset data:
+
+u39MergedData_crosslingExp_all <- subset(u39MergedData_crosslingExp, binaryResp %in% c(0,1), select=c(ID,binaryResp,Noun,NounPosition,Phase,Experiment))
+
+u39MergedData_crosslingExp_oral <- subset(u39MergedData_crosslingExp, binaryResp %in% c(0,1) & Phase == 'ComplexPhrase_Testing', select=c(ID,binaryResp,Noun, NounPosition,Experiment))
+
+u39MergedData_crosslingExp_written <- subset(u39MergedData_crosslingExp, binaryResp %in% c(0,1) & Phase == 'ComplexPhrase_Typing', select=c(ID,binaryResp,Noun, NounPosition,Experiment))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+u39.FULLmodel.simple.crossling <-glmer(binaryResp~NounPosition*Experiment+(1|ID),family=binomial, data=u39MergedData_crosslingExp_oral,control = glmerControl(optimizer = "bobyqa",optCtrl=list(maxfun=17700)),contrasts=list(NounPosition="contr.sum", Experiment = "contr.sum"))
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+kable(tidy(u39.FULLmodel.simple.crossling,effects = "fixed"), digits= 3, format = "html",caption = "**Table 2: ** \\ *Model output comparing Experiments 1 and 2 (oral production only).*") %>%
+  kable_styling( "striped", position = "left", font_size = 11)
+```
+
+# Experiment 3
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.width=5,fig.cap="**Figure 5:** \\ *Results from experiment 3.* Percentage of participants in Experiment 3 who produced scope-isomorphic responses a given proportion of the time, ranging from 100% of the time (dark red) to 0% of the time (yellow) in intervals of 10%  (i.e., proportions are rounded to one decimal). Results are split by Marker Position (pre- vs. post-nominal) and faceted by testing Phase (Oral and Written production trials)."}
+meanBySubject_expl<-subset(meanBySubject, Experiment %in% c('explicit marked'))
+
+meanBySubject_expl$NounPosition <- mapvalues(meanBySubject_expl$NounPosition , from = c('initial', 'final'), to = c('post-nom', 'pre-nom'))
+
+colors_bar_expl<-c("#8E063B","#F2B669",  "#F6C971")
+
+stack_bar_expl<-ggplot(meanBySubject_expl, aes(NounPosition,..count..,fill=bin))+geom_bar(position="fill",colour = "grey",alpha=0.8)+facet_grid(.~Phase)+  scale_y_continuous(labels = percent)+theme_bw()+labs(x="\n position of number and case markers \n ",y='% participants \n')+scale_fill_manual("proportion \nscope-isomorphic \nproductions",values = rev(colors_bar_expl))+theme(legend.title= element_text(size = 10))
+
+stack_bar_expl
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+u39MergedData_expl_oral <- subset(u39MergedData_expl, binaryResp %in% c(0,1) & Phase == 'ComplexPhrase_Testing', select=c(ID,binaryResp,Noun, NounPosition,Experiment))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+u39.FULLmodel.simple.expl <-glmer(binaryResp~NounPosition+(1|ID)+(1|Noun),family=binomial, data=u39MergedData_expl_oral,control = glmerControl(optimizer = "bobyqa",optCtrl=list(maxfun=17700)),contrasts=list(NounPosition="contr.sum"))
+
+```
+
+```{r  echo = FALSE,  message=FALSE, warning=FALSE}
+
+kable(tidy(u39.FULLmodel.simple.expl,effects = "fixed"), digits= 3, format = "html",caption = "**Table 3: ** \\ *Model output for Experiment 3 (oral production only).*") %>%
+  kable_styling( "striped", position = "left", font_size = 11)
+```
+
+
+# Experiment 4
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=4.5, fig.width=5.5,fig.cap="**Figure 6:** \\ *Results from experiment 4.* Percentage of participants in Experiment 4 who produced scope-isomorphic responses a given proportion of the time, ranging from 100% of the time (dark red) to 0% of the time (yellow) in intervals of 10%  (i.e., proportions are rounded to one decimal). Results are split by Marker Position (pre- vs. post-nominal) and faceted by Allomorphy (no allomorphy vs. case allomorphy) and testing Phase (Oral and Written production trials)."}
+meanBySubject_bound<-subset(meanBySubject, Experiment %in% c('bound', 'case allomorphy'))
+
+meanBySubject_bound$NounPosition <- mapvalues(meanBySubject_bound$NounPosition , from = c('initial', 'final'), to = c('post-nom', 'pre-nom'))
+
+meanBySubject_bound$Experiment <- mapvalues(meanBySubject_bound$Experiment , from = c("bound", "case allomorphy"), to = c('no allomorphy', 'case allomorphy'))
+
+#meanBySubject_bound_oral<-subset(meanBySubject_bound, Phase %in% 'oral')
+
+colors_bar_bound_oral<-c("#8E063B", "#AB4147",  "#C56551", "#DA8459", "#E99F61", "#F2B669", "#F6C971")
+
+stack_bar_bound_oral<-ggplot(meanBySubject_bound, aes(NounPosition,..count..,fill=bin))+geom_bar(position="fill",colour = "grey",alpha=0.8)+facet_grid(Experiment~Phase)+  scale_y_continuous(labels = percent)+theme_bw()+labs(x="\n position of number and case markers \n ",y='% participants \n')+scale_fill_manual("proportion \nscope-isomorphic \nproductions",values = rev(colors_bar_bound_oral))+theme(legend.title= element_text(size = 10))
+
+stack_bar_bound_oral
+
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+u39MergedData_boundExp$Experiment <- mapvalues(u39MergedData_boundExp$Experiment , from = c('bound','scope'), to = c("NoAllomorphy","CaseAllomorphy"))
+
+u39MergedData_boundExp_all <- subset(u39MergedData_boundExp, binaryResp %in% c(0,1), select=c(ID,binaryResp,Noun,NounPosition,Phase,Experiment))
+
+u39MergedData_boundExp_oral <- subset(u39MergedData_boundExp, binaryResp %in% c(0,1) & Phase == 'ComplexPhrase_Testing', select=c(ID,binaryResp,Noun, NounPosition,Experiment))
+
+u39MergedData_boundExp_written <- subset(u39MergedData_boundExp, binaryResp %in% c(0,1) & Phase == 'ComplexPhrase_Typing', select=c(ID,binaryResp,Noun, NounPosition,Experiment))
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+u39.BOUNDmodel <-glmer(binaryResp~NounPosition*Experiment+(1|ID),family=binomial, data=u39MergedData_boundExp_oral,control = glmerControl(optimizer = "bobyqa",optCtrl=list(maxfun=17700)),contrasts=list(NounPosition="contr.sum"))
+```
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+
+kable(tidy(u39.BOUNDmodel,effects = "fixed"), digits= 3, format = "html",caption = "**Table 4: ** \\ *Model output for Experiment 4 comparing case-allomorphy to no-allomorphy (oral production only).*") %>%
+  kable_styling( "striped", position = "left", font_size = 11)
+```
+
+# Supplementary materials
+
+## Experiment 3'
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.width=5,fig.cap="**Figure S1:** \\ *Results from experiment 3'.* Percentage of participants in Experiment 3' who produced scope-isomorphic responses a given proportion of the time, ranging from 100% of the time (dark red) to 0% of the time (yellow) in intervals of 10%  (i.e., proportions are rounded to one decimal). Results are split by Marker Position (pre- vs. post-nominal) and faceted by testing Phase (Oral and Written production trials)."}
+meanBySubject_freq<-subset(meanBySubject, Experiment %in% c('case>number frequency'))
+
+meanBySubject_freq$NounPosition <- mapvalues(meanBySubject_freq$NounPosition , from = c('initial', 'final'), to = c('post-nom', 'pre-nom'))
+
+#meanBySubject_freq_oral<-subset(meanBySubject_freq, Phase %in% 'oral')
+
+colors_bar_freq_oral<-c("#8E063B")
+
+stack_bar_freq_oral<-ggplot(meanBySubject_freq, aes(NounPosition,..count..,fill=bin))+geom_bar(position="fill",colour = "grey",alpha=0.8)+facet_grid(.~Phase)+  scale_y_continuous(labels = percent)+theme_bw()+labs(x="\n position of number and case markers \n ",y='% participants \n')+scale_fill_manual("proportion \nscope-isomorphic \nproductions",values = rev(colors_bar_freq_oral))+theme(legend.title= element_text(size = 10))
+
+stack_bar_freq_oral
+
+```
+
+
+## Accuracy
+
+```{r accuracy, echo=FALSE, warning=FALSE, message=FALSE, fig.height=9, fig.width=10,fig.cap="**Figure S2:** \\ *Participant's accuracy in production tasks across non-critical phases.* Trials were coded as either fully correct (1) or incorrect (0). (A) Mean accuracy across production tasks. Grey dots are individual scores; black dots represent the grand mean across participants within a given condition and the error bars illustrate their standard errors. The horizontal grey line shows the cut-off point in the exclusion criteria (i.e., < 2/3 accuracy). (B) Accuracy scores by production task. Top facet: (oral) noun production test in Phase 1. Bottom facet: (written) production test in Phase 4, which included both bare nouns and one-marker noun phrases."}
+u39MergedData_allALLExp$Experiment=factor(u39MergedData_allALLExp$Experiment,levels=c('original','jpn','expl','freq','bound','scope'))
+
+u39MergedData_allALLExp$NounPosition <- mapvalues(u39MergedData_allALLExp$NounPosition , from = c('initial', 'final'), to = c('post-nom', 'pre-nom'))
+
+u39MergedData_allALLExp$InputSentence<-as.character(u39MergedData_allALLExp$InputSentence)
+u39MergedData_allALLExp$SpokenResponse<-as.character(u39MergedData_allALLExp$SpokenResponse)
+u39MergedData_allALLExp$Meaning<-as.character(u39MergedData_allALLExp$Meaning)
+
+u39MergedData_allALLExp_acc <- mutate(u39MergedData_allALLExp, accuracyProduction= ifelse(Phase %!in% c('Noun_Testing', 'SimplePhrase_Typing', 'ComplexPhrase_Typing', 'ComplexPhrase_Testing'), NA, ifelse(Phase %in% c('Noun_Testing','ComplexPhrase_Testing') & InputSentence == SpokenResponse, 1, ifelse(Phase %in% c('SimplePhrase_Typing','ComplexPhrase_Typing') & InputSentence == TypedResponse, 1, 0))))
+
+u39MergedData_allALLExp_accALL <- mutate(u39MergedData_allALLExp_acc, TrialType = ifelse(grepl("_sg_",Meaning) & grepl("_pl",Meaning),"critical", NA))
+
+gray_colors<-c("#000000","#808080","#FFFFFF")
+labels_exp <- c( original = "Experiment 1", bound = "Experiment 4 \n(no allomorphy)", freq = "Experiment 3'", scope = "Experiment 4 \n(case allomorphy)", jpn = "Experiment 2", expl= "Experiment 3")
+
+labels_phase <- c(Noun_Testing = "Phase 1 testing (oral,  \n bare nouns only)", SimplePhrase_Typing = "Phase 4 testing (written,  \n  bare nouns and one-marker NPs)" )
+
+data_acc <- subset(u39MergedData_allALLExp_accALL, accuracyProduction %in% c(0,1), select=c(ID,accuracyProduction,Phase,Experiment,NounPosition,Noun))
+meanBySubject_acc <- aggregate(accuracyProduction ~ ID+Experiment+NounPosition+Phase, data_acc, mean)
+meanBySubject_acc_voc <- subset(meanBySubject_acc, Phase %in% c('Noun_Testing', 'SimplePhrase_Typing'))
+meanBySubject_acc_voc_overall <- aggregate(accuracyProduction ~ ID+Experiment+NounPosition, meanBySubject_acc_voc, mean)
+
+
+
+mean.phaseacc <- ddply(meanBySubject_acc_voc, c("NounPosition", "Phase", "Experiment"),
+                      function(meanBySubject_acc_voc)c(accuracyProduction=mean(meanBySubject_acc_voc$accuracyProduction, na.rm=T), se=se(meanBySubject_acc_voc$accuracyProduction)))
+
+mean.acc <- ddply(meanBySubject_acc_voc_overall, c("NounPosition", "Experiment"),
+                      function(meanBySubject_acc_voc_overall)c(accuracyProduction=mean(meanBySubject_acc_voc_overall$accuracyProduction, na.rm=T), se=se(meanBySubject_acc_voc_overall$accuracyProduction)))
+
+plot_voc_accuracy<-ggplot(data=meanBySubject_acc_voc, aes(y=accuracyProduction, x= NounPosition, fill = NounPosition))+ylim(0,1)+geom_dotplot(binaxis='y', stackdir='center', dotsize=.7, alpha=.5)+scale_fill_manual(values = gray_colors)+scale_colour_manual(values = c("black","black"))+theme_bw()+theme(legend.position="none",strip.background = element_blank())+labs(y=" \n \n \n \n accuracy  in non-critical protuction tests \n", x="\n position of number and case markers \n") + geom_errorbar(mapping=aes(ymin=accuracyProduction-se, ymax=accuracyProduction+se), width=.2, alpha=1, data=mean.phaseacc)+facet_grid(Phase~Experiment, labeller = labeller(Experiment=labels_exp, Phase = labels_phase))+geom_point(size=2, alpha=.9, data=mean.phaseacc, mapping=aes(y=accuracyProduction, x=NounPosition, fill=NounPosition, color=NounPosition))
+
+
+plot_voc_accuracy_overall<-ggplot(data=meanBySubject_acc_voc_overall, aes(y=accuracyProduction, x= NounPosition, fill = NounPosition))+ geom_hline(yintercept=.66, color='black', linetype='dashed', size=0.7,alpha=0.3)+ylim(0,1)+geom_dotplot(binaxis='y', stackdir='center', dotsize=.4, alpha=.5)+scale_fill_manual(values = gray_colors)+scale_colour_manual(values = c("black","black"))+theme_bw()+theme(legend.position="none",strip.background = element_blank())+labs(y="average accuracy \n across non-critical production tests \n", x="\n position of number and case markers \n")+ geom_errorbar(mapping=aes(ymin=accuracyProduction-se, ymax=accuracyProduction+se), width=.2, alpha=1, data=mean.acc)+facet_grid(.~Experiment, labeller = labeller(Experiment=labels_exp))+geom_point(size=2, alpha=.9, data=mean.acc, mapping=aes(y=accuracyProduction, x=NounPosition, fill=NounPosition, color=NounPosition))
+
+
+plot_accuracy<-ggarrange(plot_voc_accuracy_overall, plot_voc_accuracy, ncol=1, nrow=2, labels=c("A","B"), heights = c(3.3,5))
+
+plot_accuracy
+```
+
+## Trial exclusion
+```{r excluded_trials, echo=FALSE, warning=FALSE, message=FALSE, fig.height=4, fig.width=10,fig.cap="**Figure S3:** \\ *Excluded critical trials.*  Proportion of critical trials excluded from the analyses by task (written and oral). Trials were excluded only if they contained incomplete descriptions (i.e., no description at all or descriptions without both  number and case markers within the target noun phrase)."}
+
+u39MergedData_allALLExp_critical<-subset(u39MergedData_allALLExp_accALL, TrialType == "critical")
+u39MergedData_allALLExp_critical_exclusion<-mutate(u39MergedData_allALLExp_critical, Exclusion = ifelse(is.na(Noun), 1,0))
+
+exclusion_critical <-aggregate(Exclusion~ ID+Experiment+NounPosition+Phase, u39MergedData_allALLExp_critical_exclusion, mean)
+
+mean.exclusion <- ddply(exclusion_critical, c("NounPosition", "Phase","Experiment"),
+                      function(exclusion_critical)c(Exclusion=mean(exclusion_critical$Exclusion, na.rm=T), se=se(exclusion_critical$Exclusion)))
+
+labels_phase_exclusion <- c("ComplexPhrase_Testing" = "oral", "ComplexPhrase_Typing" = "written" )
+
+plot_exclusion_critical<-ggplot(data=exclusion_critical, aes(y=Exclusion, x= NounPosition, fill = NounPosition))+ylim(0,1)+geom_dotplot(binaxis='y', stackdir='center', dotsize=.7, alpha=.5)+scale_fill_manual(values = gray_colors)+scale_colour_manual(values = c("black","black"))+theme_bw()+theme(legend.position="none",strip.background = element_blank())+labs(y="proportion of excluded critical trials\n", x="\n position of number and case markers \n") +geom_point(size=2, alpha=.9, data=mean.exclusion, mapping=aes(y=Exclusion, x=NounPosition, fill=NounPosition, color=NounPosition))+ geom_errorbar(mapping=aes(ymin=Exclusion-se, ymax=Exclusion+se), width=.2, alpha=1, data=mean.exclusion)+facet_grid(Phase~Experiment, labeller = labeller(Experiment=labels_exp, Phase = labels_phase_exclusion))
+
+plot_exclusion_critical
+```
+
+## Comprehension
+```{r comprehension, echo=FALSE, warning=FALSE, message=FALSE, fig.height=7, fig.width=10,fig.cap="**Figure S4:** \\ *Participants' accuracy in comprehension.* (A) Mean accuracy across comprehension tasks. Grey dots are individual scores; black dots represent the grand mean across participants within a given condition and the error bars illustrate their standard errors.  (B) Accuracy scores by comprehension task. Top facet: bare noun comprehension task in Phase 1. Bottom facet: comprehension task in Phase 3 which included one-marker noun phrases across experiments, and bare nouns also in all experiments that included Number Only NPs as one-marker noun phrases (i.e., all but Experiment 3, 3' and 4 case allomorphy)."}
+
+labels_phase_comprehension <- c(Noun_Selection = "Phase 1 comprehension", SimplePhrase_Comprehension = "Phase 3 comprehension" )
+
+data_comprehension <- subset(u39MergedData_allALLExp_accALL, Phase %in% c("Noun_Selection","SimplePhrase_Comprehension"),select=c(ID,Selection,Phase,Experiment,NounPosition))
+
+data_comprehension<-mutate(data_comprehension, Selection = ifelse(Selection=="correct", 1,0))
+meanBySubject_comprehension <- aggregate(Selection ~ ID+Experiment+NounPosition+Phase, data_comprehension, mean)
+meanBySubject_comprehension_overall <- aggregate(Selection ~ ID+Experiment+NounPosition, meanBySubject_comprehension, mean)
+
+
+mean.phasecomp <- ddply(meanBySubject_comprehension , c("NounPosition", "Phase", "Experiment"),
+                      function(meanBySubject_comprehension)c(Selection=mean(meanBySubject_comprehension$Selection, na.rm=T), se=se(meanBySubject_comprehension$Selection)))
+
+mean.comp <- ddply(meanBySubject_comprehension_overall , c("NounPosition", "Experiment"),
+                      function(meanBySubject_comprehension_overall)c(Selection=mean(meanBySubject_comprehension_overall$Selection, na.rm=T), se=se(meanBySubject_comprehension_overall$Selection)))
+
+plot_comprehension<-ggplot(data=meanBySubject_comprehension , aes(y=Selection, x= NounPosition, fill = NounPosition))+ylim(0,1)+geom_dotplot(binaxis='y', stackdir='center', dotsize=.7, alpha=.5)+scale_fill_manual(values = gray_colors)+scale_colour_manual(values = c("black","black"))+theme_bw()+theme(legend.position="none",strip.background = element_blank())+labs(y=" \n \n \n \n accuracy  in comprehension tests \n", x="\n position of number and case markers \n") + geom_errorbar(mapping=aes(ymin=Selection-se, ymax=Selection+se), width=.2, alpha=1, data=mean.phasecomp)+facet_grid(Phase~Experiment, labeller = labeller(Experiment=labels_exp, Phase = labels_phase_comprehension))+geom_point(size=2, alpha=.9, data=mean.phasecomp, mapping=aes(y=Selection, x=NounPosition, fill=NounPosition, color=NounPosition))
+
+
+plot_comprehension_overall<-ggplot(data=meanBySubject_comprehension_overall, aes(y=Selection, x= NounPosition, fill = NounPosition))+ylim(0,1)+geom_dotplot(binaxis='y', stackdir='center', dotsize=.4, alpha=.5)+scale_fill_manual(values = gray_colors)+scale_colour_manual(values = c("black","black"))+theme_bw()+theme(legend.position="none",strip.background = element_blank())+labs(y="average accuracy \n across comprehension tests \n", x="\n position of number and case markers \n")+ geom_errorbar(mapping=aes(ymin=Selection-se, ymax=Selection+se), width=.2, alpha=1, data=mean.comp)+facet_grid(.~Experiment, labeller = labeller(Experiment=labels_exp))+geom_point(size=2, alpha=.9, data=mean.comp, mapping=aes(y=Selection, x=NounPosition, fill=NounPosition, color=NounPosition))
+
+plot_comp<-ggarrange(plot_comprehension_overall, plot_comprehension, ncol=1, nrow=2, labels=c("A","B"), heights = c(3.3,5))
+
+plot_comp
+```
+
+## Timing
+```{r timing, echo=FALSE, warning=FALSE, message=FALSE, fig.height=4, fig.width=10,fig.cap="**Figure S5:** \\ *Duration (minutes) of critical production tests (oral and written).*Grey dots are the individual times; black dots represent the grand mean across participants within a given condition and the error bars illustrate their standard errors."}
+u39MergedData_allALLExp_time<-u39MergedData_allALLExp %>%
+  mutate(Minutes = as.numeric(str_match(date.time, ":(.*?):")[,2])+(as.numeric(substr(str_match(date.time, ":(.*?) 2")[,2],4,6))/60)) %>%
+  group_by(Phase, ID,Experiment,NounPosition,) %>%
+  summarise(minValue = head(Minutes, n=1), maxValue = tail(Minutes, n=1)) %>%
+  mutate(maxValue = ifelse(maxValue < minValue, maxValue+60, maxValue)) %>%
+  mutate(duration = maxValue-minValue)
+
+u39MergedData_allALLExp_time_test <- subset(u39MergedData_allALLExp_time, Phase %in% c("ComplexPhrase_Typing","ComplexPhrase_Testing"),select=c(ID,Phase,Experiment,NounPosition, duration))
+
+
+mean.phaseDur <- ddply(u39MergedData_allALLExp_time_test, c("NounPosition", "Phase", "Experiment"),
+                      function(u39MergedData_allALLExp_time_test)c(duration=mean(u39MergedData_allALLExp_time_test$duration, na.rm=T), se=se(u39MergedData_allALLExp_time_test$duration)))
+
+labels_phase_duration <- c("ComplexPhrase_Testing" = "oral (52-58 trials)", "ComplexPhrase_Typing" = "written (12 trials)" )
+
+plot_duration<-ggplot(data=u39MergedData_allALLExp_time_test, aes(y=duration, x= NounPosition, fill = NounPosition))+scale_y_continuous(breaks=seq(-1,10,2))+geom_dotplot(binaxis='y', stackdir='center', dotsize=.7, alpha=.5)+scale_fill_manual(values = gray_colors)+scale_colour_manual(values = c("black","black"))+theme_bw()+theme(legend.position="none",strip.background = element_blank())+labs(y="duration of critical production tests (minutes)\n", x="\n position of number and case markers \n") + geom_errorbar(mapping=aes(ymin=duration-se, ymax=duration+se), width=.2, alpha=1, data=mean.phaseDur)+facet_grid(Phase~Experiment, labeller = labeller(Experiment=labels_exp, Phase = labels_phase_duration))+geom_point(size=2, alpha=.9, data=mean.phaseDur, mapping=aes(y=duration, x=NounPosition, fill=NounPosition, color=NounPosition))
+
+plot_duration
+
+```
