@@ -157,4 +157,4 @@ Creative Commons is not a party to its public licenses. Notwithstanding, Creativ
 
 Creative Commons may be contacted at creativecommons.org.
 
-Additional languages available: Nederlands (https://creativecommons.org/licenses/by/4.0/legalcode.nl), Norsk(https://creativecommons.org/licenses/by/4.0/legalcode.no), suomeksi(https://creativecommons.org/licenses/by/4.0/legalcode.fi). Please read the FAQ for more information about official translations: https://wiki.creativecommons.org/FAQ#officialtranslations .
+Additional languages available: Nederlands (https://creativecommons.org/licenses/by/4.0/legalcode.nl), Norsk(https://creativecommons.org/licenses/by/4.0/legalcode.no), suomeksi(https://creativecommons.org/licenses/by/4.0/legalcode.fi). Please read the FAQ for more information about official translations: https://wiki.creativecommons.org/FAQ#officialtranslations.
