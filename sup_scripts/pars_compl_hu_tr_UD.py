@@ -1,5 +1,5 @@
 '''
-This script relies on having the libraries in CLIQS. Follow the instructions on https://github.com/Futrell/cliqs
+This script runs on Python 3 and relies on having the UD treebanks (v 2.1) and libraries in CLIQS. Follow the instructions on https://github.com/Futrell/cliqs
 '''
 
 import pandas as pd
