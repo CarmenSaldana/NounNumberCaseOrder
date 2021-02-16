@@ -1,6 +1,6 @@
 # Cognitive constraints on number and case morpheme order: experimental code and data sets
 
-This repository contains all the materials needed to run the experiments and analyses reported in Saldana, Yohei & Culbertson (2021) ''Cross-linguistic patterns of morpheme order reflect cognitive biases: An experimental study of case and number morphology''. [https://doi.org/10.1016/j.jml.2020.104204] (https://doi.org/10.1016/j.jml.2020.104204) 
+This repository contains all the materials needed to run the experiments and analyses reported in Saldana, Yohei & Culbertson (2021) ''Cross-linguistic patterns of morpheme order reflect cognitive biases: An experimental study of case and number morphology''. https://doi.org/10.1016/j.jml.2020.104204 
 
 ## Experimental code
 
