@@ -1,6 +1,6 @@
 ---
 title: 'Analysis script'
-author: "Carmen Saldana, Yohei Oseki & Jennifer Culbertson (submitted) Cross-linguistic patterns of morpheme order reflect cognitive biases: An experimental study of case and number morphology"
+author: "Carmen Saldana, Yohei Oseki & Jennifer Culbertson (2021) Cross-linguistic patterns of morpheme order reflect cognitive biases: An experimental study of case and number morphology. JML.  https://doi.org/10.1016/j.jml.2020.104204"
 date: ""
 output: 
   html_document:
